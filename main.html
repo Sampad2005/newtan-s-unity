@@ -825,5 +825,105 @@
     </footer>
 
     <script src="script.js"></script>
+    <script>
+    // Check if user is logged in
+    if (localStorage.getItem('isLoggedIn') !== 'true' || localStorage.getItem('userType') !== 'student') {
+        window.location.href = 'index.html';
+    }
+
+    // Add logout button to navigation
+    document.addEventListener('DOMContentLoaded', function() {
+        const nav = document.querySelector('.nav ul');
+        if (nav) {
+            const logoutItem = document.createElement('li');
+            logoutItem.innerHTML = `
+                <a href="#" onclick="logout()" class="logout-link">
+                    <i class="fas fa-sign-out-alt"></i> Logout
+                </a>
+            `;
+            nav.appendChild(logoutItem);
+        }
+    });
+
+    function logout() {
+        localStorage.removeItem('isLoggedIn');
+        localStorage.removeItem('userType');
+        localStorage.removeItem('loginTime');
+        window.location.href = 'index.html';
+    }
+</script>
+<script>
+/*
+  Unified auth helper for main.html
+  - Prevents unconditional redirect that blocked notes from showing
+  - Migrates older admin keys ('isLoggedIn' / 'userType') to the site's expected keys ('newtan_loggedIn' / 'newtan_user')
+  - Adds a logout link that clears both key formats and redirects to login (index.html)
+*/
+
+// Migrate admin/session keys if present
+(function migrateAuthKeys() {
+    if (localStorage.getItem('isLoggedIn') === 'true') {
+        localStorage.setItem('newtan_loggedIn', 'true');
+    }
+    const adminUser = localStorage.getItem('userType');
+    if (adminUser && !localStorage.getItem('newtan_user')) {
+        localStorage.setItem('newtan_user', adminUser);
+    }
+})();
+
+// OPTIONAL: If you want to force-login before viewing main page, uncomment below.
+// if (localStorage.getItem('newtan_loggedIn') !== 'true') {
+//     window.location.href = 'index.html';
+// }
+
+// Add logout link and handler to navigation
+document.addEventListener('DOMContentLoaded', function () {
+    const nav = document.querySelector('.nav ul');
+    if (nav && !document.querySelector('.logout-link')) {
+        const li = document.createElement('li');
+        li.innerHTML = `
+            <a href="#" class="logout-link">
+                <i class="fas fa-sign-out-alt"></i> Logout
+            </a>
+        `;
+        nav.appendChild(li);
+
+        li.querySelector('.logout-link').addEventListener('click', function (e) {
+            e.preventDefault();
+            // Clear both old and new auth keys
+            localStorage.removeItem('newtan_loggedIn');
+            localStorage.removeItem('newtan_user');
+            localStorage.removeItem('isLoggedIn');
+            localStorage.removeItem('userType');
+            localStorage.removeItem('loginTime');
+            // Redirect to login page
+            window.location.href = 'index.html';
+        });
+    }
+
+    // If notes are not visible immediately, ensure notes system initializes when logged in
+    if (typeof initNotesSystem === 'function' && localStorage.getItem('newtan_loggedIn') === 'true') {
+        initNotesSystem();
+    } else if (typeof loadNotes === 'function') {
+        // try to load notes even if no full auth flow present (useful for debugging)
+        loadNotes();
+    }
+});
+</script>
 </body>
 </html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
