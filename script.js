@@ -395,11 +395,82 @@ function formatDate(dateString) {
     return new Date(dateString).toLocaleDateString('en-US', options);
 }
 
-// Initialize when DOM is loaded
-document.addEventListener('DOMContentLoaded', function() {
-    // Your existing initialization code
-    initNotesSystem();
-    
-    // Set current year in footer
-    document.getElementById('currentYear').textContent = new Date().getFullYear();
+// --- simple auth / login redirect helpers ---
+function isLoggedIn() {
+    return localStorage.getItem('newtan_loggedIn') === 'true';
+}
+
+function showSectionById(id) {
+    document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+    const el = document.getElementById(id);
+    if (el) el.classList.add('active');
+    // update nav active state
+    document.querySelectorAll('.nav a').forEach(a => a.classList.remove('active'));
+    const navLink = document.querySelector(`.nav a[href="#${id}"]`);
+    if (navLink) navLink.classList.add('active');
+}
+
+function requireLoginRedirect() {
+    // If there's no login section in markup, do nothing
+    const loginSection = document.getElementById('loginSection');
+    if (!loginSection) return;
+
+    if (!isLoggedIn()) {
+        // Force show login page and prevent other sections from showing
+        showSectionById('loginSection');
+    } else {
+        // show home (or whatever was intended) if logged in
+        showSectionById('home');
+    }
+}
+
+// Hook a simple login form (id="loginForm") to set logged-in state
+function setupLoginHandlers() {
+    const loginForm = document.getElementById('loginForm');
+    if (loginForm) {
+        loginForm.addEventListener('submit', function (e) {
+            e.preventDefault();
+            // basic example: accept any non-empty username/password
+            const username = this.elements['username']?.value?.trim();
+            const password = this.elements['password']?.value?.trim();
+            if (!username || !password) {
+                alert('Enter username and password');
+                return;
+            }
+            // set flag (in real app, validate on server)
+            localStorage.setItem('newtan_loggedIn', 'true');
+            // optional: save username
+            localStorage.setItem('newtan_user', username);
+            // go to home after login
+            showSectionById('home');
+            // initialize app pieces that require auth
+            initNotesSystem();
+        });
+    }
+
+    const logoutBtn = document.getElementById('logoutBtn');
+    if (logoutBtn) {
+        logoutBtn.addEventListener('click', function () {
+            localStorage.removeItem('newtan_loggedIn');
+            localStorage.removeItem('newtan_user');
+            requireLoginRedirect();
+        });
+    }
+
+    // Prevent navigation to other sections if not logged in
+    document.querySelectorAll('.nav a, .footer-links a').forEach(link => {
+        link.addEventListener('click', function (e) {
+            if (!isLoggedIn()) {
+                e.preventDefault();
+                showSectionById('loginSection');
+            }
+        });
+    });
+}
+
+// call on DOM ready
+document.addEventListener('DOMContentLoaded', function () {
+    // setup login handlers and redirect if needed
+    setupLoginHandlers();
+    requireLoginRedirect();
 });
