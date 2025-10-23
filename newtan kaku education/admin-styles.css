@@ -1,0 +1,42 @@
+/* Admin Link in Navigation */
+.admin-link {
+    background: #e74c3c;
+    color: white !important;
+    padding: 8px 15px !important;
+    border-radius: 5px;
+    margin-left: 10px;
+}
+
+.admin-link:hover {
+    background: #c0392b;
+}
+
+/* Teacher Portal Button */
+.btn-admin {
+    background: #9b59b6;
+    color: white;
+    border: 2px solid #9b59b6;
+}
+
+.btn-admin:hover {
+    background: transparent;
+    color: #9b59b6;
+}
+
+/* No Notes State */
+.no-notes {
+    text-align: center;
+    padding: 60px 20px;
+    color: #666;
+}
+
+.no-notes .fa-file-alt {
+    font-size: 3rem;
+    margin-bottom: 20px;
+    color: #bdc3c7;
+}
+
+.no-notes h4 {
+    margin-bottom: 10px;
+    color: #2c3e50;
+}
