@@ -3,11 +3,17 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Teacher Login - Newtan's Unity</title>
+    <title>Login - Newtan's Unity</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="styles.css">
     <style>
-        .login-container {
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Poppins', sans-serif;
+        }
+
+        body {
             min-height: 100vh;
             display: flex;
             align-items: center;
@@ -16,7 +22,7 @@
             padding: 20px;
         }
 
-        .login-card {
+        .login-container {
             background: white;
             padding: 40px;
             border-radius: 15px;
@@ -39,6 +45,7 @@
         .login-logo h1 {
             color: #2c3e50;
             margin-bottom: 5px;
+            font-size: 1.8rem;
         }
 
         .login-logo p {
@@ -84,27 +91,12 @@
             font-weight: 600;
             cursor: pointer;
             transition: all 0.3s;
+            margin-top: 10px;
         }
 
         .login-btn:hover {
             background: #2980b9;
             transform: translateY(-2px);
-        }
-
-        .back-to-home {
-            margin-top: 20px;
-        }
-
-        .back-to-home a {
-            color: #3498db;
-            text-decoration: none;
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .back-to-home a:hover {
-            text-decoration: underline;
         }
 
         .error-message {
@@ -113,61 +105,135 @@
             font-size: 0.9rem;
             display: none;
         }
+
+        .user-type {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .user-btn {
+            flex: 1;
+            padding: 10px;
+            border: 2px solid #e0e0e0;
+            background: white;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .user-btn.active {
+            border-color: #3498db;
+            background: #3498db;
+            color: white;
+        }
+
+        .demo-credentials {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 20px;
+            font-size: 0.8rem;
+            color: #666;
+        }
     </style>
 </head>
 <body>
     <div class="login-container">
-        <div class="login-card">
-            <div class="login-logo">
-                <img src="image.png" alt="Newtan's Unity Logo">
-                <h1>Newtan's Unity</h1>
-                <p>Teacher Admin Portal</p>
+        <div class="login-logo">
+            <img src="image.png" alt="Newtan's Unity Logo" onerror="this.style.display='none'">
+            <h1>Newtan's Unity</h1>
+            <p>Dream. Believe. Achieve.</p>
+        </div>
+
+        <div class="user-type">
+            <button class="user-btn active" data-user="student">Student</button>
+            <button class="user-btn" data-user="teacher">Teacher</button>
+        </div>
+
+        <form id="loginForm" class="login-form">
+            <div class="form-group">
+                <label for="username">Username</label>
+                <input type="text" id="username" name="username" required placeholder="Enter username">
             </div>
 
-            <form id="teacherLoginForm" class="login-form">
-                <div class="form-group">
-                    <label for="username">Username</label>
-                    <input type="text" id="username" name="username" required placeholder="Enter your username">
-                </div>
+            <div class="form-group">
+                <label for="password">Password</label>
+                <input type="password" id="password" name="password" required placeholder="Enter password">
+            </div>
 
-                <div class="form-group">
-                    <label for="password">Password</label>
-                    <input type="password" id="password" name="password" required placeholder="Enter your password">
-                </div>
+            <div id="errorMessage" class="error-message">
+                Invalid username or password
+            </div>
 
-                <div id="errorMessage" class="error-message">
-                    Invalid username or password
-                </div>
+            <button type="submit" class="login-btn">
+                <i class="fas fa-sign-in-alt"></i> Login to Portal
+            </button>
+        </form>
 
-                <button type="submit" class="login-btn">
-                    <i class="fas fa-sign-in-alt"></i> Login to Admin Panel
-                </button>
-
-                <div class="back-to-home">
-                    <a href="login.html">
-                        <i class="fas fa-arrow-left"></i> Back to Main Website
-                    </a>
-                </div>
-            </form>
+        <div class="demo-credentials">
+            <strong>Demo Credentials:</strong><br>
+            Student: student / student123<br>
+            Teacher: teacher / newtan123
         </div>
     </div>
 
     <script>
-        document.getElementById('teacherLoginForm').addEventListener('submit', function(e) {
+        let currentUserType = 'student';
+        
+        // User type selection
+        document.querySelectorAll('.user-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                document.querySelectorAll('.user-btn').forEach(b => b.classList.remove('active'));
+                this.classList.add('active');
+                currentUserType = this.dataset.user;
+                
+                // Update form labels based on user type
+                const usernameLabel = document.querySelector('label[for="username"]');
+                const passwordLabel = document.querySelector('label[for="password"]');
+                
+                if (currentUserType === 'teacher') {
+                    usernameLabel.textContent = 'Teacher Username';
+                    passwordLabel.textContent = 'Teacher Password';
+                } else {
+                    usernameLabel.textContent = 'Username';
+                    passwordLabel.textContent = 'Password';
+                }
+            });
+        });
+
+        // Login form handler
+        document.getElementById('loginForm').addEventListener('submit', function(e) {
             e.preventDefault();
             
             const username = document.getElementById('username').value;
             const password = document.getElementById('password').value;
             const errorMessage = document.getElementById('errorMessage');
             
-            // Simple authentication (replace with secure authentication in production)
-            if (username === 'teacher' && password === 'newtan123') {
-                // Store login status in localStorage
-                localStorage.setItem('teacherLoggedIn', 'true');
+            let isValid = false;
+            let redirectUrl = '';
+
+            // Check credentials based on user type
+            if (currentUserType === 'teacher') {
+                if (username === 'teacher' && password === 'newtan123') {
+                    isValid = true;
+                    redirectUrl = 'admin.html';
+                }
+            } else {
+                if (username === 'student' && password === 'student123') {
+                    isValid = true;
+                    redirectUrl = 'main.html';
+                }
+            }
+
+            if (isValid) {
+                // Store login status
+                localStorage.setItem('userType', currentUserType);
+                localStorage.setItem('isLoggedIn', 'true');
                 localStorage.setItem('loginTime', new Date().getTime());
                 
-                // Redirect to admin panel
-                window.location.href = 'admin.html';
+                // Redirect to appropriate page
+                window.location.href = redirectUrl;
             } else {
                 errorMessage.style.display = 'block';
                 setTimeout(() => {
@@ -177,10 +243,14 @@
         });
 
         // Check if already logged in
-        if (localStorage.getItem('teacherLoggedIn') === 'true') {
-            window.location.href = 'admin.html';
+        if (localStorage.getItem('isLoggedIn') === 'true') {
+            const userType = localStorage.getItem('userType');
+            if (userType === 'teacher') {
+                window.location.href = 'admin.html';
+            } else {
+                window.location.href = 'main.html';
+            }
         }
     </script>
 </body>
 </html>
-
