@@ -178,7 +178,7 @@
 
         .management-header {
             display: flex;
-            justify-content: between;
+            justify-content: space-between;
             align-items: center;
             margin-bottom: 20px;
         }
@@ -270,6 +270,45 @@
             font-size: 1rem;
         }
 
+        .search-box {
+            position: relative;
+            flex: 1;
+            max-width: 300px;
+        }
+
+        .search-box .fa-search {
+            position: absolute;
+            left: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #666;
+        }
+
+        .search-box input {
+            width: 100%;
+            padding: 10px 15px 10px 45px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 1rem;
+        }
+
+        .no-notes {
+            text-align: center;
+            padding: 60px 20px;
+            color: #666;
+        }
+
+        .no-notes .fa-file-alt {
+            font-size: 3rem;
+            margin-bottom: 20px;
+            color: #bdc3c7;
+        }
+
+        .no-notes h4 {
+            margin-bottom: 10px;
+            color: #2c3e50;
+        }
+
         @media (max-width: 768px) {
             .form-row {
                 grid-template-columns: 1fr;
@@ -283,6 +322,22 @@
             
             .admin-tabs {
                 flex-wrap: wrap;
+            }
+            
+            .management-header {
+                flex-direction: column;
+                gap: 15px;
+                align-items: stretch;
+            }
+            
+            .note-management-item {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 15px;
+            }
+            
+            .note-actions {
+                align-self: flex-end;
             }
         }
     </style>
@@ -300,7 +355,7 @@
                         </div>
                     </div>
                     <div class="admin-actions">
-                        <a href="index.html" class="btn btn-outline">
+                        <a href="main.html" class="btn btn-outline" onclick="viewWebsite()">
                             <i class="fas fa-globe"></i> View Website
                         </a>
                         <button id="logoutBtn" class="btn btn-primary">
@@ -421,16 +476,26 @@
     </div>
 
     <script>
-        // Check authentication
+        // Check if teacher is logged in
         const loginTime = localStorage.getItem('loginTime');
         const currentTime = new Date().getTime();
         
-        // Logout after 2 hours
-        if (!localStorage.getItem('teacherLoggedIn') || (currentTime - loginTime) > 7200000) {
-            localStorage.removeItem('teacherLoggedIn');
+        if (localStorage.getItem('isLoggedIn') !== 'true' || 
+            localStorage.getItem('userType') !== 'teacher' ||
+            (currentTime - loginTime) > 7200000) {
+            localStorage.removeItem('isLoggedIn');
+            localStorage.removeItem('userType');
             localStorage.removeItem('loginTime');
-            window.location.href = 'login.html';
+            window.location.href = 'index.html';
         }
+
+        // Update logout button
+        document.getElementById('logoutBtn').addEventListener('click', function() {
+            localStorage.removeItem('isLoggedIn');
+            localStorage.removeItem('userType');
+            localStorage.removeItem('loginTime');
+            window.location.href = 'index.html';
+        });
 
         // Tab functionality
         document.querySelectorAll('.admin-tab').forEach(tab => {
@@ -441,7 +506,6 @@
                 
                 // Add active class to clicked tab and content
                 tab.classList.add('active');
-                document.getElementById(`${tab.dataset.tab}-tab`).class            
                 document.getElementById(`${tab.dataset.tab}-tab`).classList.add('active');
                 
                 // Load content based on tab
@@ -500,6 +564,9 @@
             if (document.querySelector('.admin-tab.active').dataset.tab === 'manage') {
                 loadManageNotes();
             }
+            
+            // Update statistics
+            loadStatistics();
         });
 
         // Load notes for management
@@ -619,12 +686,61 @@
             const options = { year: 'numeric', month: 'short', day: 'numeric' };
             return new Date(dateString).toLocaleDateString('en-US', options);
         }
+        // Function to view website as student
+            function viewWebsite() {
+                // Set student credentials temporarily to bypass login
+                localStorage.setItem('userType', 'student');
+                localStorage.setItem('isLoggedIn', 'true');
+                localStorage.setItem('loginTime', new Date().getTime());
+                
+                // Redirect to main website
+                window.location.href = 'main.html';
+            }
 
-        // Logout functionality
-        document.getElementById('logoutBtn').addEventListener('click', function() {
-            localStorage.removeItem('teacherLoggedIn');
-            localStorage.removeItem('loginTime');
-            window.location.href = 'login.html';
+        // Search functionality for manage tab
+        document.getElementById('searchManage').addEventListener('input', function(e) {
+            const searchTerm = e.target.value.toLowerCase();
+            const notes = getNotes();
+            const filteredNotes = notes.filter(note => 
+                note.title.toLowerCase().includes(searchTerm) || 
+                note.description.toLowerCase().includes(searchTerm)
+            );
+            
+            const container = document.getElementById('manageNotesList');
+            
+            if (filteredNotes.length === 0) {
+                container.innerHTML = `
+                    <div class="no-notes">
+                        <i class="fas fa-search"></i>
+                        <h4>No notes found</h4>
+                        <p>Try adjusting your search terms</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            container.innerHTML = filteredNotes.map(note => `
+                <div class="note-management-item" data-id="${note.id}">
+                    <div class="note-info">
+                        <h4>${note.title}</h4>
+                        <div class="note-meta">
+                            <span class="category">${getCategoryLabel(note.category)}</span>
+                            <span class="class">${getClassLabel(note.classLevel)}</span>
+                            <span class="size">${note.fileSize}</span>
+                            <span class="date">${formatDate(note.uploadDate)}</span>
+                            <span class="downloads">${note.downloads} downloads</span>
+                        </div>
+                    </div>
+                    <div class="note-actions">
+                        <button class="btn-edit" onclick="editNote(${note.id})">
+                            <i class="fas fa-edit"></i> Edit
+                        </button>
+                        <button class="btn-delete" onclick="deleteNote(${note.id})">
+                            <i class="fas fa-trash"></i> Delete
+                        </button>
+                    </div>
+                </div>
+            `).join('');
         });
 
         // Initialize
